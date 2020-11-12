@@ -52,6 +52,7 @@
   };
 
   async function tvl(timestamp, block) {
+    //var block = 11101015;
     const promises = [
       getUnderlying('fWETHv0',block),
       getUnderlying('fDAIv0',block),
@@ -85,35 +86,36 @@
       '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2': BigNumber(results[0]).plus(results[16])        // WETH
               .plus(results[8][1]).plus(results[9][1]).plus(results[10][0]).plus(results[11][1])   // WETH UNIv0
               .plus(results[12][1]).plus(results[13][1]).plus(results[14][0]).plus(results[15][1]) // WETH UNI
-              .toFixed(18),
+              .div(BigNumber(10).pow(18)).times(400).toFixed(18),
       '0x6B175474E89094C44Da98b954EedeAC495271d0F': BigNumber(results[1]).plus(results[17])        // DAI
               .plus(results[8][0])                                                    // DAI UNIv0
               .plus(results[12][0])                                                   // DAI UNI
-	      .toFixed(18),
+	      .div(BigNumber(10).pow(18)).times(1).toFixed(18),
       '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48': BigNumber(results[2]).plus(results[18])        // USDC
               .plus(results[9][0])                                                    // USDC UNIv0
               .plus(results[13][0])                                                   // USDC UNI
-	      .toFixed(6),
+	      .div(BigNumber(10).pow(6)).times(1).toFixed(6),
       '0xdAC17F958D2ee523a2206206994597C13D831ec7': BigNumber(results[3]).plus(results[19])        // USDT
               .plus(results[10][1])                                                   // USDT UNIv0
               .plus(results[14][1])                                                   // USDT UNI
-	      .toFixed(6),
+	      .div(BigNumber(10).pow(6)).times(1).toFixed(6),
       '0x0000000000085d4780B73119b644AE5ecd22b376': BigNumber(results[4])             // TUSD
-	      .toFixed(18),
+	      .div(BigNumber(10).pow(18)).times(1).toFixed(18),
       '0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599': BigNumber(results[5]).plus(results[20])        // WBTC
               .plus(results[11][0])                                                   // WBTC UNIv0
               .plus(results[15][0])                                                   // WBTC UNI
               .plus(BigNumber(results[23][0]).times(BigNumber("10").pow(-10)))        // WBTC SUSHI
 	      .plus(BigNumber(results[23][1]).times(BigNumber("10").pow(-10)))
-	      .toFixed(8),                                                            // TBTC SUSHI
+	      .div(BigNumber(10).pow(8)).times(15000).toFixed(8),                                                            // TBTC SUSHI
       '0xEB4C2781e4ebA804CE9a9803C67d0893436bB27D': BigNumber(results[6])             // RENBTCv0
               .plus(results[21])                                                      // RENBTC
               .plus(BigNumber(results[7]).times(BigNumber("10").pow(-10)))            // crvRENWBTCv0, estimate
               .plus(BigNumber(results[22]).times(BigNumber("10").pow(-10)))           // crvRENWBTC, estimate
-	      .toFixed(8),
+	      .div(BigNumber(10).pow(8)).times(15000).toFixed(8),
        // TODO attribute TBTC when supported
     };
-
+    //console.table(balances);
+    console.log(Object.values(balances).reduce(function(a,b){ return parseInt(a) + parseInt(b) }, 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
     return balances;
   }
 
@@ -138,22 +140,11 @@
         if (!fSharePrice.isEqualTo(ERROR)) {
           return fBalance.times(fSharePrice).div(fUnderlyingUnit);
         }
-      }
-      catch {
-        // if shareprice unavailable, assume shareprice is 1
-        const abridged_promises = [
-          sdk.api.abi.call({ block, target: fTokens[token].contract, abi: 'erc20:totalSupply', }),
-        ];
-	try {
-          let abridged_results = await Promise.all(abridged_promises);
-          if (abridged_results.length === 0) {
-            return 0;
-          }
-          let fBalance = BigNumber(abridged_results[0].output);
+	else {
           return fBalance;
-        }
-        catch { }
+	}
       }
+      catch { }
     }
     return 0;
   }
